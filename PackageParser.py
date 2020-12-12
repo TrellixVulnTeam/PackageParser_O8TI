@@ -29,24 +29,25 @@ python autoRon.py -s \\path\\to\\archive.7z -o \\path\\to\\out -p <password> --s
 class PackageParser:
     toolPath = Path.cwd() / 'tools'
 
-    def __init__(self, source, out_dir):
+    def __init__(self, source, out_dir, password=None, search=False):
         self.source = source
-        self.password = args.password
+        self.password = password
+        self.search = search
 
-        if '.7z' in str(self.source):
+        if self.source.suffix == '.7z':
             self.package = Path(str(self.source)[:str(self.source).index('.7z')])
-        elif '.tar' in str(self.source):
-            self.package = Path(str(self.source)[:str(self.source).index('.tar')])
-        else:
+        elif self.source.suffix == '.zip':
             self.package = Path(str(self.source)[:str(self.source).index('.zip')])
+        else:
+            self.package = Path(str(self.source)[:str(self.source).index('.tar')])
 
         self.out_dir = Path(out_dir) / self.package.name
-        self.ez_log = self.out_dir / 'EZtools.log'
+        # self.ez_log = self.out_dir / 'EZtools.log'
 
         if not self.out_dir.exists():
             self.out_dir.mkdir(parents=True, exist_ok=True)
 
-        if args.search:
+        if self.search:
             self.rgx_dict = {}
             self.str_dict = {}
             self.rgx_file = Path.cwd() / 'search' / args.search
@@ -115,7 +116,8 @@ class PackageParser:
 
     def run_command(self, command):
         """run subprocess and redirect console output to log"""
-        with self.ez_log.open('a') as fh:
+        ez_log = self.out_dir / 'tools.log'
+        with ez_log.open('a') as fh:
             spr = subprocess.run(command, stdout=fh, stderr=fh, timeout=300)
             spr.check_returncode()
 
@@ -131,7 +133,7 @@ class PackageParser:
             self.source.unlink()
             self.logger('INFO', f'Deleted 7zip Archive: {self.source.name}')
         except subprocess.CalledProcessError:
-            self.logger('ERROR', f'Problem extracting 7zip. Check {self.ez_log} for details.')
+            self.logger('ERROR', 'Problem extracting 7zip. Check tools.log for details.')
             print(Fore.LIGHTRED_EX + '\nIt was probably your password.')
             sys.exit()
 
@@ -146,6 +148,7 @@ class PackageParser:
             self.logger('INFO', f'Deleted tar file: {self.source.name}')
         except Exception as e:
             self.logger('ERROR', 'Problem extracting tar file: ' + str(e))
+            sys.exit()
 
     def extract_zipfile(self):
         """extract .zip no password"""
@@ -158,6 +161,7 @@ class PackageParser:
             self.logger('INFO', f'Deleted zip file: {self.source.name}')
         except Exception as e:
             self.logger('ERROR', 'Problem extracting zip file: ' + str(e))
+            sys.exit()
 
     def convert_csv(self):
         """convert JSON files to CSV"""
@@ -404,6 +408,8 @@ class PackageParser:
         start_time = datetime.now().replace(microsecond=0)
         if self.source.suffix == '.7z' and self.password is not None:
             self.extract_sevenzip()
+        elif self.source.suffix == '.zip':
+            self.extract_zipfile()
         else:
             self.extract_tar()
         self.convert_csv()
@@ -453,7 +459,7 @@ def main():
                     source = i
                     if not args.password:
                         sys.exit(Fore.LIGHTRED_EX + '\nNo password provided. Exiting.')
-                    package = PackageParser(source, out_dir)
+                    package = PackageParser(source, out_dir, args.password, args.search)
                     package.run_all()
 
             elif len(tar_arc) > 0:
@@ -463,7 +469,7 @@ def main():
                 print(Fore.LIGHTCYAN_EX + '\n' + tz)
                 for i in tar_arc:
                     source = i
-                    package = PackageParser(source, out_dir)  # initialize PackageParser object
+                    package = PackageParser(source, out_dir, args.password, args.search)  # initialize PackageParser object
                     package.run_all()
 
             elif len(zip_files) > 0:
@@ -473,7 +479,7 @@ def main():
                 print(Fore.LIGHTCYAN_EX + '\n' + zpz)
                 for i in zip_files:
                     source = i
-                    package = PackageParser(source, out_dir)
+                    package = PackageParser(source, out_dir, args.password, args.search)
                     package.run_all()
             else:
                 sys.exit(Fore.LIGHTRED_EX + f'\nPath: {user_source} contains no packages. Exiting.')
@@ -487,19 +493,19 @@ def main():
                 source = user_source
                 if not args.password:
                     sys.exit(Fore.LIGHTRED_EX + '\nNo password provided. Exiting.')
-                package = PackageParser(source, out_dir)
+                package = PackageParser(source, out_dir, args.password, args.search)
                 package.run_all()
 
             elif user_source.suffix == '.tar' or user_source.suffix == '.gz':
                 print(Fore.LIGHTGREEN_EX + '\nFound Package: ' + Fore.LIGHTWHITE_EX + f'{user_source}')
                 source = user_source
-                package = PackageParser(source, out_dir)  # initialize PackageParser object
+                package = PackageParser(source, out_dir, args.password, args.search)  # initialize PackageParser object
                 package.run_all()
 
             elif user_source.suffix == '.zip':
                 print(Fore.LIGHTGREEN_EX + '\nFound Package: ' + Fore.LIGHTWHITE_EX + f'{user_source}')
                 source = user_source
-                package = PackageParser(source, out_dir)
+                package = PackageParser(source, out_dir, args.password, args.search)
                 package.run_all()
             else:
                 sys.exit(Fore.LIGHTRED_EX + '\nThis isn\'t the file you\'re looking for. Check your path. Exiting.')
