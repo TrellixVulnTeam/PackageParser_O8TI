@@ -1,0 +1,119 @@
+# Version 20201027
+# Use 1 for regex and 0 for simple string search (case insensitive)
+# Format should be: 1;regex;description of regex OR 0;string;description of string
+# Caution on anchoring regex. The script reads each row in output CSVs as a string
+# Comment out any line you don't want used
+#
+#
+## Suspicious locations and files (work in progress)
+1;(?i)C:\\Temp(\\|,)[\w-]+\.exe;Executable file in C:\Temp
+1;(?i)C:\\Temp(\\|,)[\w-]+\.ps1;PS script in C:\Temp
+1;(?i)C:\\Temp(\\|,)[\w-]+\.bat;Batch file in C:\Temp
+1;(?i)C:\\Temp(\\|,)[\w-]+\.vbs;VBS file in C:\Temp
+1;(?i)C:\\Temp(\\|,)[\w-]+\.hta; HTA file in C:\Temp
+1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.exe;executable in C:\Windows\Temp
+1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.ps1;PS script in C:\Windows\Temp
+1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.bat;Batch file in C:\Windows\Temp
+1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.vbs;VBS file in C:\Windows\Temp
+1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.hta;HTA file in C:\Windows\Temp
+1;(?i)\\Users\\.*\\AppData\\Local\\Temp(\\|,)[\w-]+\.exe;Executable in %TEMP%
+1;(?i)(C:|\.|SYSVOL)\\Windows(\\|,)\b(?!HelpPane\b|regedit\b|fveupdate\b|bfsvc\b|explorer|notepad\b|splwow64\b|winhlp32\b|write\b|hh\b)[\w-]+\.exe;Executable in C:\Windows
+1;(?i)(C:|\.|SYSVOL)\\Windows(\\|,)[\w-]+\.bat;Batch file in C:\Windows
+1;(?i)(C:|\.|SYSVOL)\\Windows(\\|,)[\w-]+\.ps1;PS script in C:\Windows
+1;(?i)(C:|\.|SYSVOL)\\Windows(\\|,)[\w-]+\.vbs;VBS in C:\Windows
+1;(?i)(C:|\.|SYSVOL)\\Windows(\\|,)[\w-]+\.hta;HTA file in C:\Windows
+1;(?i)C:\\[\w-]+\.exe;Executable in root of C:
+1;(?i)\\ProgramData(\\|,)[\w-]+\.exe;Executable in C:\ProgramData
+1;(?i)\\ProgramData(\\|,)[\w-]+\.ps1;PS Script in C:\ProgramData
+1;(?i)\\ProgramData(\\|,)[\w-]+\.bat;Batch file in C:\ProgramData
+1;(?i)\\ProgramData(\\|,)[\w-]+\.vbs;VBS file in C:\ProgramData
+1;(?i)\\ProgramData(\\|,)[\w-]+\.hta;HTA file in C:\ProgramData
+1;(?i)\\Users\\Default(\\|,)[\w-]+\.exe;Executable in C:\Users\Default
+1;(?i)\\Users\\Default(\\|,)[\w-]+\.ps1;PS script in C:\Users\Default
+1;(?i)\\Users\\Default(\\|,)[\w-]+\.bat;Batch file in C:\Users\Default
+1;(?i)\\Users\\Default(\\|,)[\w-]+\.vbs;VBS file in C:\Users\Default
+1;(?i)\\Users\\Default(\\|,)[\w-]+\.hta;HTA file in C:\Users\Default
+1;(?i)\\Users\\Public(\\|,)[\w-]+\.exe;Executable in C:\Users\Public
+1;(?i)\\Users\\Public(\\|,)[\w-]+\.ps1;PS script in C:\Users\Public
+1;(?i)\\Users\\Public(\\|,)[\w-]+\.bat;Batch file in C:\Users\Public
+1;(?i)\\Users\\Public(\\|,)[\w-]+\.vbs;VBS file in C:\Users\Public
+1;(?i)\\Users\\Public(\\|,)[\w-]+\.hta;HTA file in C:\Users\Public
+1;(?i)\\Users\\Public(\\|,)[\w]{5}\.exe;Possible Ryuk ransomware
+1;(?i)\\Perflogs(\\|,)[\w-]+\.exe;Executable in C:\Perflogs
+1;(?i)\\Perflogs(\\|,)[\w-]+\.ps1;PS script in C:\Perflogs
+1;(?i)\\Perflogs(\\|,)[\w-]+\.bat;Batch file in C:\Perflogs
+1;(?i)\\Perflogs(\\|,)[\w-]+\.vbs;VBS file in C:\Perflogs
+1;(?i)\\Perflogs(\\|,)[\w-]+\.hta;HTA file in C:\Perflogs
+1;(?i)\\Users\\.*\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp\\[\w-]+\.lnk;User LNK file persistence in StartUp
+1;(?i)\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp(\\|,)[\w-]+\.lnk;LNK file persistence in StartUp
+#
+## Misspelled windows binaries (more to add)
+1;(scvhost|svch0st|svchosts|svchots|suchost|svchost\.)\.exe;Misspelled svchost.exe
+1;(rundll|rundll64)\.exe;Misspelled rundll32.exe
+#
+## PowerShell and Post Exploitation Frameworks
+1;(?i)\\127\.0\.0\.1\\ADMIN\$\\[\w]{7}\.exe;Possible Cobalt Strike service binary
+1;(?i)msagent_[\w]{3,5};Cobalt Strike P2P Named Pipe
+1;[a-zA-Z0-9/+=]{500};500+ consecutive Base64 characters
+1;cmd\.exe /c echo [a-z]{6} > \\\\.\\pipe\\[a-z]{6};Metasploit-style cmd with pipe
+1;powershell.*FromBase64String.*IO.Compression.GzipStream;Encoded compressed PowerShell
+1;%COMSPEC%;COMSPEC environment variable
+1;(?i)DownloadString\(.http;Download via Net.WebClient DownloadString
+1;(?i)DownloadFile\(.http;Download via Net.WebClient DownloadFile
+#
+## Recon/Credentials/Defense evasion
+1;(?i)LogFileCleared;Defense Evasion log clearing
+1;(?i)advanced_port_scanner;Advanced Port Scanner
+1;(?i)advanced_ip_scanner;Advanced IP Scanner
+1;(?i)(netscan|netscan32|netscan64)\.exe;SoftPerfect Network Scanner
+1;(?i)ProcessHacker\.exe;Process Hacker usage
+1;(?i)comps[0-9]{1,3}\.txt;Recon output file
+1;(?i)AdFind;AdFind AD query tool
+1;(?i)mimikatz;Credential harvesting
+1;(?i)(procdump|procdump64|pdump)\.exe;Credential Harvesting
+1;(pwhash|pwdump|fgdump)\.exe;Credential Harvesting
+1;(?i)lsass\.dmp;Credential harvesting
+1;(?i)PSEXESVC\.exe;PsExec service host
+1;(?i)psexec\.exe;PsExec usage
+1;(?i)(\\|,)pse\.exe;Possibly renamed PsExec
+#
+## Exfil
+1;(?i)Mega Limited;MEGA Cloud exfil
+1;(?i)MEGAsync\.exe;MEGA Cloud exfil
+1;(?i)(MEGAsyncSetup(32|64)|MEGAsyncSetup)\.exe;MEGA Cloud exfil
+1;(?i)mega\.nz;MEGA Cloud exfil
+1;(?i)sendspace;SendSpace file hosting exfil/download
+1;(?i)dropmefiles;DropMeFiles file hosting exfil
+1;(?i)WinRar;WinRAR archiver usage
+1;(?i)(\\|,)(WinRAR|wr|rar)\.exe;WinRAR archiver usage
+1;(?i)(\\|,)WinSCP\.exe;WinSCP FTP client usage
+1;(?i)temp-mail\.org;Temp-mail account creation
+1;(?i)pcloud\.com;pCloud exfil
+#
+## Emotet
+1;(?i)(\\|,)[0-9]+\.exe;Possible emotet, all digit EXE
+#
+## Trickbot
+1;(?i)importDll(32|64);TrickBot Modules
+1;(?i)injectDll(32|64);TrickBot Modules
+1;(?i)mailsearcher(32|64);TrickBot Modules
+1;(?i)networkDll(32|64);TrickBot Modules
+1;(?i)NewBCtestnDll(32|64);TrickBot Modules
+1;(?i)psfin(32|64);TrickBot Modules
+1;(?i)pwgrab(32|64);TrickBot Modules
+1;(?i)shareDll(32|64);TrickBot Modules
+1;(?i)tabDll(32|64);TrickBot Modules
+1;(?i)vncDll(32|64);TrickBot Modules
+1;(?i)wormDll(32|64);TrickBot Modules
+1;(?i)systeminfo(32|64);TrickBot Modules
+1;(?i)mwormDll;TrickBot Modules
+1;(?i)mshareDll;TrickBot Modules
+#
+## Maze and Qbot
+1;(?i)\\ProgramData(\\|,)[\w]{7,9}\.[a-z]{3};Qbot IOC
+1;(?i)\\ProgramData(\\|,)[\w-]+\.dll;MAZE IOC DLL in ProgramData
+1;(?i)\\Perflogs(\\|,)[\w-]+\.dll;MAZE IOC DLL in Perflogs
+1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.dll;MAZE IOC DLL in C:\Windows\Temp
+#
+#
+## Case (add case-specific IOCs here)
