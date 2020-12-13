@@ -18,10 +18,10 @@ example_text = '''
 Examples:
 
 Extract and process all packages in a directory:
-python autoRon.py -s \\path\\to\\archives -o \\path\\to\\out -p <password>
+python PackageParser.py -s \\path\\to\\archives -o \\path\\to\\out -p <password>
 
 Extract and process an individual package and search output:
-python autoRon.py -s \\path\\to\\archive.7z -o \\path\\to\\out -p <password> --search
+python PackageParser.py -s \\path\\to\\archive.7z -o \\path\\to\\out -p <password> --search
 
 '''
 
@@ -29,7 +29,7 @@ python autoRon.py -s \\path\\to\\archive.7z -o \\path\\to\\out -p <password> --s
 class PackageParser:
     toolPath = Path.cwd() / 'tools'
 
-    def __init__(self, source, out_dir, password=None, search=False):
+    def __init__(self, source, out_dir, password=None, search=None):
         self.source = source
         self.password = password
         self.search = search
@@ -49,7 +49,7 @@ class PackageParser:
         if self.search:
             self.rgx_dict = {}
             self.str_dict = {}
-            self.rgx_file = Path.cwd() / 'search' / args.search
+            self.rgx_file = Path.cwd() / 'search' / self.search
 
         print(Fore.LIGHTGREEN_EX + f'\nCreating PackageParser object for package: '
                                    f'' + Fore.LIGHTWHITE_EX + f'{self.source.name}\n')
@@ -91,11 +91,11 @@ class PackageParser:
                 else:
                     print(Fore.YELLOW + '\nNo matches found.')
             else:
-                print(Fore.YELLOW + f'No CSV files found in {self.out_dir}')
+                print(Fore.YELLOW + f'\nNo CSV files found in {self.out_dir}')
 
     def logger(self, lev, msg):
         line = str(datetime.now().replace(microsecond=0)) + ' | ' + lev + ': ' + msg
-        log_path = self.out_dir / 'autoRon.log'
+        log_path = self.out_dir / 'PackageParser.log'
 
         if lev == 'SUCCESS':
             print(Fore.LIGHTGREEN_EX + line)
@@ -437,7 +437,7 @@ def main():
 
     if not PackageParser.toolPath.exists():
         sys.exit(Fore.LIGHTRED_EX + '\nCan\'t find the tools folder. The tools folder should be placed in '
-                                    'the same directory as autoRon. Exiting.')
+                                    'the same directory as PackageParser. Exiting.')
 
     if user_source.exists():
         if user_source.is_dir():
