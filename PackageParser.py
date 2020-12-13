@@ -424,7 +424,7 @@ class PackageParser:
         self.jumplist_parse()
         self.logger('DONE', f'Processed {self.package.name} in {datetime.now().replace(microsecond=0) - start_time}')
         print(Fore.LIGHTGREEN_EX + '\nOutput written to: ' + Fore.LIGHTWHITE_EX + f'{self.out_dir}')
-        if args.search:
+        if self.search:
             self.searcher()
 
 
