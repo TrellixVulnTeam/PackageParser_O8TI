@@ -42,7 +42,6 @@ class PackageParser:
             self.package = Path(str(self.source)[:str(self.source).index('.tar')])
 
         self.out_dir = Path(out_dir) / self.package.name
-        # self.ez_log = self.out_dir / 'EZtools.log'
 
         if not self.out_dir.exists():
             self.out_dir.mkdir(parents=True, exist_ok=True)
@@ -469,7 +468,8 @@ def main():
                 print(Fore.LIGHTCYAN_EX + '\n' + tz)
                 for i in tar_arc:
                     source = i
-                    package = PackageParser(source, out_dir, args.password, args.search)  # initialize PackageParser object
+                    package = PackageParser(source, out_dir, args.password,
+                                            args.search)  # initialize PackageParser object
                     package.run_all()
 
             elif len(zip_files) > 0:
