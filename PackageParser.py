@@ -439,78 +439,44 @@ def main():
         sys.exit(Fore.LIGHTRED_EX + '\nCan\'t find the tools folder. The tools folder should be placed in '
                                     'the same directory as PackageParser. Exiting.')
 
-    if user_source.exists():
-        if user_source.is_dir():
-            if str(user_source) == out_dir:
-                sys.exit(Fore.LIGHTRED_EX + '-s (--source) and -o (--out) cannot be the same directory. Exiting.')
+    if user_source.is_dir():
+        if str(user_source) == out_dir:
+            sys.exit(Fore.LIGHTRED_EX + '-s (--source) and -o (--out) cannot be the same directory. Exiting.')
 
-            sev_zips = [i for i in list(user_source.glob('*.7z')) if 'after' not in str(i)]
-            tar_arc = list(user_source.glob('*.tar')) + list(user_source.glob('*.tar.gz'))
-            zip_files = [i for i in list(user_source.glob('*.zip'))]
+        ext_glob = ['*.7z', '*.zip', '*.gz']
+        archives = [a for a in [user_source.glob(e) for e in ext_glob] for a in a]
 
-            if len(sev_zips) > 0:
-                pz = '\n'.join(map(str, sev_zips))
-                print(
-                    Fore.LIGHTGREEN_EX + f'\nFound {len(sev_zips)} Package(s) '
-                                         'in: ' + Fore.LIGHTWHITE_EX + f'{user_source}')
-                print(Fore.LIGHTCYAN_EX + '\n' + pz)
-                for i in sev_zips:
-                    source = i
-                    if not args.password:
-                        sys.exit(Fore.LIGHTRED_EX + '\nNo password provided. Exiting.')
-                    package = PackageParser(source, out_dir, args.password, args.search)
+        if len(archives) > 0:
+            pa = '\n'.join(map(str, archives))
+            print(Fore.LIGHTGREEN_EX + f'\nFound {len(archives)} Package(s) '
+                                       'in: ' + Fore.LIGHTWHITE_EX + f'{user_source}')
+            print(Fore.LIGHTCYAN_EX + '\n' + pa)
+            for archive in archives:
+                if archive.suffix == '.7z' and not args.password:
+                    sys.exit(Fore.LIGHTRED_EX + f'\nNo password provided for .7z. Exiting')
+                else:
+                    package = PackageParser(archive, out_dir, args.password, args.search)
                     package.run_all()
+        else:
+            sys.exit(Fore.LIGHTRED_EX + f'\nPath: {user_source} contains no packages. Exiting.')
 
-            elif len(tar_arc) > 0:
-                tz = '\n'.join(map(str, tar_arc))
-                print(Fore.LIGHTGREEN_EX + f'\nFound {len(tar_arc)} Package(s) '
-                                           f'in: ' + Fore.LIGHTWHITE_EX + f'{user_source}')
-                print(Fore.LIGHTCYAN_EX + '\n' + tz)
-                for i in tar_arc:
-                    source = i
-                    package = PackageParser(source, out_dir, args.password,
-                                            args.search)  # initialize PackageParser object
-                    package.run_all()
+    elif user_source.is_file():
+        exts = ['.7z', '.zip', '.gz']
+        if str(user_source.parent) == out_dir:
+            sys.exit(Fore.LIGHTRED_EX + '\nOutput directory cannot be the same as the source file. Exiting.')
 
-            elif len(zip_files) > 0:
-                zpz = '\n'.join(map(str, zip_files))
-                print(Fore.LIGHTGREEN_EX + f'\nFound {len(zip_files)} Package(s) '
-                                           f'in: ' + Fore.LIGHTWHITE_EX + f'{user_source}')
-                print(Fore.LIGHTCYAN_EX + '\n' + zpz)
-                for i in zip_files:
-                    source = i
-                    package = PackageParser(source, out_dir, args.password, args.search)
-                    package.run_all()
+        if user_source.suffix in exts:
+            print(Fore.LIGHTGREEN_EX + '\nFound package: ' + Fore.LIGHTWHITE_EX + f'{user_source}')
+
+            if user_source.suffix == '.7z' and not args.password:
+                sys.exit(Fore.LIGHTRED_EX + '\nNo password provided for .7z. Exiting.')
             else:
-                sys.exit(Fore.LIGHTRED_EX + f'\nPath: {user_source} contains no packages. Exiting.')
-
-        elif user_source.is_file():
-            if str(user_source.parent) == out_dir:
-                sys.exit(Fore.LIGHTRED_EX + '\nOutput directory cannot be the same as the source file. Exiting.')
-
-            if user_source.suffix == '.7z':
-                print(Fore.LIGHTGREEN_EX + '\nFound Package: ' + Fore.LIGHTWHITE_EX + f'{user_source}')
-                source = user_source
-                if not args.password:
-                    sys.exit(Fore.LIGHTRED_EX + '\nNo password provided. Exiting.')
-                package = PackageParser(source, out_dir, args.password, args.search)
+                package = PackageParser(user_source, out_dir, args.password, args.search)
                 package.run_all()
-
-            elif user_source.suffix == '.tar' or user_source.suffix == '.gz':
-                print(Fore.LIGHTGREEN_EX + '\nFound Package: ' + Fore.LIGHTWHITE_EX + f'{user_source}')
-                source = user_source
-                package = PackageParser(source, out_dir, args.password, args.search)  # initialize PackageParser object
-                package.run_all()
-
-            elif user_source.suffix == '.zip':
-                print(Fore.LIGHTGREEN_EX + '\nFound Package: ' + Fore.LIGHTWHITE_EX + f'{user_source}')
-                source = user_source
-                package = PackageParser(source, out_dir, args.password, args.search)
-                package.run_all()
-            else:
-                sys.exit(Fore.LIGHTRED_EX + '\nThis isn\'t the file you\'re looking for. Check your path. Exiting.')
+        else:
+            sys.exit(Fore.LIGHTRED_EX + f'\nWrong file type based on extension: {user_source.name}')
     else:
-        sys.exit(Fore.LIGHTRED_EX + f'\nInvalid path. Please check your path and try again. Exiting')
+        sys.exit(Fore.LIGHTRED_EX + f'Invalid path {user_source}')
 
 
 if __name__ == '__main__':
