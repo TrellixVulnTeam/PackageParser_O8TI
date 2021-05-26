@@ -6,44 +6,15 @@
 #
 #
 ## Suspicious locations and files (work in progress)
-1;(?i)C:\\Temp(\\|,)[\w-]+\.exe;Executable file in C:\Temp
-1;(?i)C:\\Temp(\\|,)[\w-]+\.ps1;PS script in C:\Temp
-1;(?i)C:\\Temp(\\|,)[\w-]+\.bat;Batch file in C:\Temp
-1;(?i)C:\\Temp(\\|,)[\w-]+\.vbs;VBS file in C:\Temp
-1;(?i)C:\\Temp(\\|,)[\w-]+\.hta; HTA file in C:\Temp
-1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.exe;executable in C:\Windows\Temp
-1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.ps1;PS script in C:\Windows\Temp
-1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.bat;Batch file in C:\Windows\Temp
-1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.vbs;VBS file in C:\Windows\Temp
-1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.hta;HTA file in C:\Windows\Temp
+1;(?i)C:\\Temp(\\|,)[\w-]+\.(exe|ps1|bat|vbs|hta);Suspicious file in C:\Temp
+1;(?i)\\Windows\\Temp(\\|,)[\w-]+\.(exe|ps1|bat|vbs|hta);Suspicious file in C:\Windows\Temp
 1;(?i)\\Users\\.*\\AppData\\Local\\Temp(\\|,)[\w-]+\.exe;Executable in %TEMP%
-1;(?i)(C:|\.|SYSVOL)\\Windows(\\|,)\b(?!HelpPane\b|regedit\b|fveupdate\b|bfsvc\b|explorer|notepad\b|splwow64\b|winhlp32\b|write\b|hh\b)[\w-]+\.exe;Executable in C:\Windows
-1;(?i)(C:|\.|SYSVOL)\\Windows(\\|,)[\w-]+\.bat;Batch file in C:\Windows
-1;(?i)(C:|\.|SYSVOL)\\Windows(\\|,)[\w-]+\.ps1;PS script in C:\Windows
-1;(?i)(C:|\.|SYSVOL)\\Windows(\\|,)[\w-]+\.vbs;VBS in C:\Windows
-1;(?i)(C:|\.|SYSVOL)\\Windows(\\|,)[\w-]+\.hta;HTA file in C:\Windows
-1;(?i)C:\\[\w-]+\.exe;Executable in root of C:
-1;(?i)\\ProgramData(\\|,)[\w-]+\.exe;Executable in C:\ProgramData
-1;(?i)\\ProgramData(\\|,)[\w-]+\.ps1;PS Script in C:\ProgramData
-1;(?i)\\ProgramData(\\|,)[\w-]+\.bat;Batch file in C:\ProgramData
-1;(?i)\\ProgramData(\\|,)[\w-]+\.vbs;VBS file in C:\ProgramData
-1;(?i)\\ProgramData(\\|,)[\w-]+\.hta;HTA file in C:\ProgramData
-1;(?i)\\Users\\Default(\\|,)[\w-]+\.exe;Executable in C:\Users\Default
-1;(?i)\\Users\\Default(\\|,)[\w-]+\.ps1;PS script in C:\Users\Default
-1;(?i)\\Users\\Default(\\|,)[\w-]+\.bat;Batch file in C:\Users\Default
-1;(?i)\\Users\\Default(\\|,)[\w-]+\.vbs;VBS file in C:\Users\Default
-1;(?i)\\Users\\Default(\\|,)[\w-]+\.hta;HTA file in C:\Users\Default
-1;(?i)\\Users\\Public(\\|,)[\w-]+\.exe;Executable in C:\Users\Public
-1;(?i)\\Users\\Public(\\|,)[\w-]+\.ps1;PS script in C:\Users\Public
-1;(?i)\\Users\\Public(\\|,)[\w-]+\.bat;Batch file in C:\Users\Public
-1;(?i)\\Users\\Public(\\|,)[\w-]+\.vbs;VBS file in C:\Users\Public
-1;(?i)\\Users\\Public(\\|,)[\w-]+\.hta;HTA file in C:\Users\Public
-1;(?i)\\Users\\Public(\\|,)[\w]{5}\.exe;Possible Ryuk ransomware
-1;(?i)\\Perflogs(\\|,)[\w-]+\.exe;Executable in C:\Perflogs
-1;(?i)\\Perflogs(\\|,)[\w-]+\.ps1;PS script in C:\Perflogs
-1;(?i)\\Perflogs(\\|,)[\w-]+\.bat;Batch file in C:\Perflogs
-1;(?i)\\Perflogs(\\|,)[\w-]+\.vbs;VBS file in C:\Perflogs
-1;(?i)\\Perflogs(\\|,)[\w-]+\.hta;HTA file in C:\Perflogs
+1;(?i)(C:|\.|SYSVOL)\\Windows(\\|,)\b(?!HelpPane\b|regedit\b|fveupdate\b|bfsvc\b|explorer|notepad\b|splwow64\b|winhlp32\b|write\b|hh\b)[\w-]+\.(exe|ps1|bat|vbs|hta);Suspicious file in C:\Windows
+1;(?i)C:\\[\w-]+\.(exe|ps1|bat|vbs|hta);Suspicious file in root of C:
+1;(?i)\\ProgramData(\\|,)[\w-]+\.(exe|ps1|bat|vbs|hta);Suspicious file in C:\ProgramData
+1;(?i)\\Users\\Default(\\|,)[\w-]+\.(exe|ps1|bat|vbs|hta);Suspicious file in C:\Users\Default
+1;(?i)\\Users\\Public(\\|,)[\w-]+\.(exe|ps1|bat|vbs|hta);Suspicious in C:\Users\Public
+1;(?i)\\Perflogs(\\|,)[\w-]+\.(exe|ps1|bat|vbs|hta);Suspicious file in C:\Perflogs
 1;(?i)\\Users\\.*\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp\\[\w-]+\.lnk;User LNK file persistence in StartUp
 1;(?i)\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp(\\|,)[\w-]+\.lnk;LNK file persistence in StartUp
 #
@@ -52,10 +23,9 @@
 1;(rundll|rundll64)\.exe;Misspelled rundll32.exe
 #
 ## PowerShell and Post Exploitation Frameworks
-1;(?i)\\127\.0\.0\.1\\ADMIN\$\\[\w]{7}\.exe;Possible Cobalt Strike service binary
-1;(?i)msagent_[\w]{3,5};Cobalt Strike P2P Named Pipe
+1;(?i)\\127\.0\.0\.1\\ADMIN\$\\[\w]{7}\.exe;Cobalt Strike service binary
 1;[a-zA-Z0-9/+=]{500};500+ consecutive Base64 characters
-1;cmd\.exe /c echo [a-z]{6} > \\\\.\\pipe\\[a-z]{6};Metasploit-style cmd with pipe
+1;cmd\.exe /c echo [a-z]{6,11} > \\\\.\\pipe\\[a-z]{6};named pipe impersonation privesc
 1;powershell.*FromBase64String.*IO.Compression.GzipStream;Encoded compressed PowerShell
 1;%COMSPEC%;COMSPEC environment variable
 1;(?i)DownloadString\(.http;Download via Net.WebClient DownloadString
