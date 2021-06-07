@@ -21,11 +21,12 @@
 ## Misspelled windows binaries (more to add)
 1;(scvhost|svch0st|svchosts|svchots|suchost|svchost\.)\.exe;Misspelled svchost.exe
 1;(rundll|rundll64)\.exe;Misspelled rundll32.exe
+1;(dllhot|dllhots|dllhosts)\.exe;Misspelled dllhost.exe
 #
 ## PowerShell and Post Exploitation Frameworks
 1;(?i)\\127\.0\.0\.1\\ADMIN\$\\[\w]{7}\.exe;Cobalt Strike service binary
 1;[a-zA-Z0-9/+=]{500};500+ consecutive Base64 characters
-1;cmd\.exe /c echo [a-z]{6,11} > \\\\.\\pipe\\[a-z]{6};named pipe impersonation privesc
+1;cmd\.exe /c echo [a-z0-9]{6,11} > \\\\.\\pipe\\[a-z0-9]{6};named pipe impersonation privesc
 1;powershell.*FromBase64String.*IO.Compression.GzipStream;Encoded compressed PowerShell
 1;%COMSPEC%;COMSPEC environment variable
 1;(?i)DownloadString\(.http;Download via Net.WebClient DownloadString
