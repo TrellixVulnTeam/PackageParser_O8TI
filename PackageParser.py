@@ -113,12 +113,26 @@ class PackageParser:
         except Exception as e:
             print(Fore.LIGHTRED_EX + f'\nERROR: {e}')
 
-    def run_command(self, command):
+    def run_simp_command(self, command):
         """run subprocess and redirect console output to log"""
         ez_log = self.out_dir / 'tools.log'
         with ez_log.open('a') as fh:
             spr = subprocess.run(command, stdout=fh, stderr=fh, timeout=300)
             spr.check_returncode()
+
+    def run_command(self, command, bin_path, artifact, out_path):
+        """run subprocess and redirect console output to log"""
+        ez_log = self.out_dir / 'tools.log'
+        with ez_log.open('a') as fh:
+            try:
+                self.logger('INFO', f'Found {artifact}. Running {bin_path.name}')
+                spr = subprocess.run(command, stdout=fh, stderr=fh, timeout=1200)
+                spr.check_returncode()
+                self.logger('SUCCESS', f'{artifact} output written to {out_path}')
+            except subprocess.CalledProcessError as e:
+                self.logger('ERROR', str(e))
+            except subprocess.TimeoutExpired:
+                self.logger('ERROR', f'{bin_path.name} exceeded 20 minute timeout')
 
     def extract_sevenzip(self):
         """extract password protected 7zip archives"""
@@ -186,24 +200,22 @@ class PackageParser:
             self.logger('NOTICE', f'No QueryResults found in package: {self.package.name}. Skipping...')
 
     def mft_parse(self):
-        """find and parse $MFT"""
+        """find and parse $MFT and UsnJrnl"""
         mftecmd = PackageParser.toolPath / 'MFTECmd.exe'
-        empty = not bool(list(self.package.rglob('$MFT')))
+        mft_list = list(self.package.rglob('$MFT'))
+        j_list = list(self.package.rglob('$J'))
 
-        if not empty:
-            mft_path = self.package.rglob('$MFT')
-            mft_out = self.out_dir / 'Filesystem'
-            command = [str(mftecmd), '-f', '"' + str(next(mft_path)) + '"', '--csv', str(mft_out)]
-            try:
-                self.logger('INFO', f'Parsing the $MFT in package: {self.package.name}')
-                self.run_command(command)
-                self.logger('SUCCESS', f'$MFT output written to: {mft_out}')
-            except subprocess.CalledProcessError as e:
-                self.logger('ERROR', str(e))
-            except subprocess.TimeoutExpired:
-                self.logger('ERROR', f'{mftecmd.name} exceeded 5 minute timeout.')
-        else:
-            self.logger('NOTICE', f'No $MFT found in package: {self.source.name}. Skipping...')
+        if mft_list:
+            mft_out = self.out_dir / 'Filesystem/MFT'
+            for mft in mft_list:
+                command = [str(mftecmd), '-f', '"' + str(mft) + '"', '--csv', str(mft_out)]
+                self.run_command(command, mftecmd, '$MFT', str(mft_out))
+
+        if j_list:
+            j_out = self.out_dir / 'Filesystem/UsnJrnl'
+            for j in j_list:
+                command = [str(mftecmd), '-f', '"' + str(j) + '"', '--csv', str(j_out)]
+                self.run_command(command, mftecmd, '$J', str(j_out))
 
     def shim_parse(self):
         """find and parse SYSTEM hive"""
@@ -214,14 +226,7 @@ class PackageParser:
             shim_path = list(i for i in self.package.rglob('SYSTEM') if i.is_file())
             shim_out = self.out_dir / 'ProgramExecution/Shimcache'
             command = [str(ez_shim), '-f', '"' + str(shim_path[0]) + '"', '--csv', str(shim_out), '--nl']
-            try:
-                self.logger('INFO', f'Parsing shimcache in package: {self.package.name}')
-                self.run_command(command)
-                self.logger('SUCCESS', f'Shimcache output written to: {shim_out}')
-            except subprocess.CalledProcessError as e:
-                self.logger('ERROR', str(e))
-            except subprocess.TimeoutExpired:
-                self.logger('ERROR', f'{ez_shim.name} exceeded 5 minute timeout.')
+            self.run_command(command, ez_shim, 'SYSTEM Hive (shimcache', shim_out)
         else:
             self.logger('NOTICE', f'No SYSTEM file found in package: {self.package.name}. Skipping...')
 
@@ -234,14 +239,7 @@ class PackageParser:
             amc_path = self.package.rglob('Amcache.hve')
             amc_out = self.out_dir / 'ProgramExecution/Amcache'
             command = [str(ez_amc), '-f', '"' + str(next(amc_path)) + '"', '--csv', str(amc_out), '--nl']
-            try:
-                self.logger('INFO', f'Parsing Amcache.hve in package: {self.package.name}')
-                self.run_command(command)
-                self.logger('SUCCESS', f'Amcache output written to: {amc_out}')
-            except subprocess.CalledProcessError as e:
-                self.logger('ERROR', str(e))
-            except subprocess.TimeoutExpired:
-                self.logger('ERROR', f'{ez_amc.name} exceeded 5 minute timeout.')
+            self.run_command(command, ez_amc, 'Amcache.hve', amc_out)
         else:
             self.logger('NOTICE', f'No Amcache.hve found in package: {self.package.name}. Skipping...')
 
@@ -254,14 +252,7 @@ class PackageParser:
             rfc_path = self.package.rglob('RecentFileCache.bcf')
             rfc_out = self.out_dir / 'ProgramExecution/RecentFileCache'
             command = [str(ez_rfc), '-f', '"' + str(next(rfc_path)) + '"', '--csv', str(rfc_out)]
-            try:
-                self.logger('INFO', f'Parsing RecentFileCache in package: {self.package.name}')
-                self.run_command(command)
-                self.logger('SUCCESS', f'RecentFileCache output written to: {rfc_out}')
-            except subprocess.CalledProcessError as e:
-                self.logger('ERROR', str(e))
-            except subprocess.TimeoutExpired:
-                self.logger('ERROR', f'{ez_rfc.name} exceeded 5 minute timeout.')
+            self.run_command(command, ez_rfc, 'RecentFileCache.bcf', rfc_out)
         else:
             self.logger('NOTICE', f'No RecentFileCache.bcf found in package: {self.package.name}. Skipping...')
 
@@ -274,14 +265,7 @@ class PackageParser:
             pf_dir = list(self.package.rglob('*.pf'))
             pf_out = self.out_dir / 'ProgramExecution/Prefetch'
             command = [str(pecmd), '-d', '"' + str(pf_dir[0].parent) + '"', '--csv', str(pf_out)]
-            try:
-                self.logger('INFO', f'Parsing Prefetch files in package: {self.package.name}')
-                self.run_command(command)
-                self.logger('SUCCESS', f'Prefetch output written to: {pf_out}')
-            except subprocess.CalledProcessError as e:
-                self.logger('ERROR', str(e))
-            except subprocess.TimeoutExpired:
-                self.logger('ERROR', f'{pecmd.name} exceeded 5 minute timeout.')
+            self.run_command(command, pecmd, 'Prefetch files', pf_out)
         else:
             self.logger('NOTICE', f'No Prefetch files found in package: {self.package.name}. Skipping...')
 
@@ -334,17 +318,7 @@ class PackageParser:
             winevt_path = list(self.package.rglob('*.evtx'))
             winevt_out = self.out_dir / 'EventLogs'
             command = [str(evtxecmd), '-d', '"' + str(winevt_path[0].parent) + '"', '--csv', str(winevt_out)]
-
-            try:
-                self.logger('INFO', f'Parsing Event Logs in package: {self.package.name}')
-                self.run_command(command)
-                self.logger('SUCCESS', f'Event Logs output written to: {winevt_out}')
-            except subprocess.CalledProcessError as e:
-                self.logger('ERROR', str(e))
-            except subprocess.TimeoutExpired:
-                self.logger('ERROR', f'{evtxecmd.name} exceeded 5 minute timeout')
-        else:
-            self.logger('NOTICE', f'No Event Logs found in package: {self.package.name}. Skipping...')
+            self.run_command(command, evtxecmd, 'Event Logs', winevt_out)
 
     def shellbags_parse(self):
         """find and parse User registry hive files"""
@@ -354,14 +328,7 @@ class PackageParser:
         if not empty:
             sb_out = self.out_dir / 'FileFolderAccess/ShellBags'
             command = [str(sbecmd), '-d', '"' + str(self.package) + '"', '--csv', str(sb_out), '--nl']
-            try:
-                self.logger('INFO', f'Parsing ShellBags in package: {self.package.name}')
-                self.run_command(command)
-                self.logger('SUCCESS', f'ShellBags output written to: {sb_out}')
-            except subprocess.CalledProcessError as e:
-                self.logger('ERROR', str(e))
-            except subprocess.TimeoutExpired:
-                self.logger('ERROR', f'{sbecmd.name} exceeded 5 minute timeout')
+            self.run_command(command, sbecmd, 'User hives (shellbags', sb_out)
         else:
             self.logger('NOTICE', f'No User Hives found in package: {self.package.name}. Skipping...')
 
@@ -373,16 +340,7 @@ class PackageParser:
         if not empty:
             lnk_out = self.out_dir / 'FileFolderAccess/LNKfiles'
             command = [str(lecmd), '-d', '"' + str(self.package) + '"', '--csv', str(lnk_out), '--all']
-            try:
-                self.logger('INFO', f'Parsing LNK files in package: {self.package.name}')
-                self.run_command(command)
-                self.logger('SUCCESS', f'LNK file output written to: {lnk_out}')
-            except subprocess.CalledProcessError as e:
-                self.logger('ERROR', str(e))
-            except subprocess.TimeoutExpired:
-                self.logger('ERROR', f'{lecmd.name} exceeded 5 minute timeout')
-        else:
-            self.logger('NOTICE', f'No LNK files found in package: {self.package.name}. Skipping...')
+            self.run_command(command, lecmd, 'LNK files', lnk_out)
 
     def jumplist_parse(self):
         """find and parse Jump Lists"""
@@ -392,16 +350,7 @@ class PackageParser:
         if not empty:
             jl_out = self.out_dir / 'FileFolderAccess/JumpLists'
             command = [str(jlecmd), '-d', '"' + str(self.package) + '"', '--csv', str(jl_out)]
-            try:
-                self.logger('INFO', f'Parsing JumpLists in package: {self.package.name}')
-                self.run_command(command)
-                self.logger('SUCCESS', f'JumpLists output written to: {jl_out}')
-            except subprocess.CalledProcessError as e:
-                self.logger('ERROR', str(e))
-            except subprocess.TimeoutExpired:
-                self.logger('ERROR', f'{jlecmd.name} exceeded 5 minute timeout.')
-        else:
-            self.logger('NOTICE', f'No JumpLists found in package: {self.package.name}. Skipping...')
+            self.run_command(command, jlecmd, 'Jump Lists', jl_out)
 
     def run_all(self):
         start_time = datetime.now().replace(microsecond=0)
